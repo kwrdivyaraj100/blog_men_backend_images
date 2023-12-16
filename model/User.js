@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+const mongoose = require('mongoose');
+
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
@@ -17,7 +17,6 @@ const userSchema = new Schema({
         required: true,
         minlength: 6,
     },
-    blogs: [{ type: mongoose.Types.ObjectId, ref: "Blog", required: true }],
+    //   blogs: [{ type: mongoose.Types.ObjectId, ref: "Blog", required: true }],
 });
-
 module.exports = mongoose.model("User", userSchema);

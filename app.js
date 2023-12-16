@@ -1,19 +1,17 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const userRouter = require('./routes/user-routes.js');
-const blogRouter = require('./routes/blog-routes.js');
 const cors = require('cors');
-
+const router = require("./routes/user-routes.js");
 
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use("/api/user", userRouter);
-app.use("/api/blog", blogRouter);
+app.use("/api/user", router);
+
 mongoose
     .connect(
-        "mongodb+srv://admin:divya@cluster0.utimwbh.mongodb.net/?retryWrites=true&w=majority"
+        "mongodb+srv://admin:divya@cluster0.utimwbh.mongodb.net/Blog?retryWrites=true&w=majority"
     )
     .then(() => app.listen(5000))
     .then(() =>

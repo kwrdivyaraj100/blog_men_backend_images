@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Blog = require("../model/Blog.js");
 const User = require("../model/User.js");
+const path = require('path');
+
 
 module.exports.getAllBlogs = async (req, res, next) => {
   let blogs;
@@ -17,24 +19,49 @@ module.exports.getAllBlogs = async (req, res, next) => {
 
 
 module.exports.addBlog = async (req, res, next) => {
-  const { title, description, image, user } = req.body;
+  const { title, description, userID } = req.body;
 
-  let existingUser;
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(404).json({ message: "Image Does not Exist" });
+}
+
+const { image } = req.files;
+
+let uploadPath;
+let date = new Date()
+let newFileName = "img_" +
+    date.getDate() +
+    (date.getMonth() + 1) +
+    date.getFullYear() +
+    date.getHours() +
+    date.getMinutes() +
+    date.getSeconds() +
+    date.getMilliseconds() +
+    '.jpg';
+
+uploadPath = path.join(__dirname, '..', '/upload', newFileName);
+
+  let existingUser = null;
   try {
-    existingUser = await User.findById(user);
+    existingUser = await User.findById(userID);
   } catch (err) {
     return console.log(err);
   }
   if (!existingUser) {
     return res.status(400).json({ message: "Unable TO Find User By This ID" });
   }
+  console.log("Completed User Validation");
   const blog = new Blog({
     title,
     description,
-    image,
-    user,
+    image: '/photo/' + newFileName,
+    user: userID,
   });
+  console.log(newFileName);
   try {
+    image.mv(uploadPath, (err) => {
+        if (err) return res.status(500).json({ message: "Backend: Image could not be uploaded" });
+    });
     const session = await mongoose.startSession();
     session.startTransaction({ session });
     await blog.save({ session });
@@ -52,12 +79,37 @@ module.exports.addBlog = async (req, res, next) => {
 
 module.exports.updateBlog = async (req, res, next) => {
   const { title, description } = req.body;
+  const { image } = req.files;
   const blogId = req.params.id;
+
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).send('No files were Found.');
+}
+let uploadPath;
+let date = new Date()
+let newFileName = "img_" +
+    date.getDate() +
+    (date.getMonth() + 1) +
+    date.getFullYear() +
+    date.getHours() +
+    date.getMinutes() +
+    date.getSeconds() +
+    date.getMilliseconds() +
+    '.jpg';
+//  uploadPath = __dirname + '/upload/' + newFileName;
+uploadPath = path.join(__dirname, '..', '/upload', newFileName);
+console.log(uploadPath);
+
   let blog;
   try {
-    blog = await Blog.findByIdAndUpdate(blogId, {
+    await Blog.updateOne({ "_id": blogId },  {
       "title": title,
       "description": description,
+      image: '/photo/' + newFileName,
+    });
+    blog = await Blog.findById(blogId);
+    image.mv(uploadPath, (err) => {
+        if (err) return res.status(500).json({ msg: "Image could not be uploaded" });
     });
   } catch (err) {
     return console.log(err);
@@ -89,7 +141,7 @@ module.exports.deleteBlog = async (req, res, next) => {
 
   let blog;
   try {
-    blog = await Blog.findByIdAndRemove(id).populate("user");
+    blog = await Blog.findByIdAndDelete(id).populate("user");
     await blog.user.blogs.pull(blog);
     await blog.user.save();
   } catch (err) {

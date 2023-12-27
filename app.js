@@ -3,10 +3,13 @@ const mongoose = require('mongoose');
 const userRouter = require("./routes/user-routes.js");
 const blogRouter = require("./routes/blog-routes.js");
 const cors = require('cors');
+const fileupload = require('express-fileupload');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(fileupload());
+app.use('/photo', express.static('upload'));
 
 app.use("/api/user", userRouter);
 app.use("/api/blog", blogRouter);

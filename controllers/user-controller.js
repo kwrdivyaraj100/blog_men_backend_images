@@ -67,5 +67,18 @@ module.exports.login = async (req, res, next) => {
     return res
         .status(200)
         .json({ message: "Login Successfull", user: existingUser });
-}
+};
 
+module.exports.retrive = async (req, res, next) => {
+    const id = req.params.id;
+    let user;
+    try {
+        user = await User.findById(id);
+    } catch (err) {
+        return console.log(err);
+    }
+    if (!user) {
+        return res.status(404).json({ message: "No User Found" });
+    }
+    return res.status(200).json({ user });
+};
